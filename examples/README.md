@@ -35,6 +35,25 @@ img_002.jpg                              NO           214ms
 img_003.jpg                              YES          221ms
 ```
 
+## `langchain_integration.py` — Use Anchor as a LangChain tool
+
+```python
+from langchain_integration import AnchorVisionTool
+
+tool = AnchorVisionTool(
+    endpoint="https://your-anchor.run.app",
+    adapter="open_circuit",
+    prompt="Is there a defect? Answer YES or NO.",
+)
+
+result = tool.invoke({"image_path": "image.jpg"})
+# → "YES"
+```
+
+Drop into any LangChain agent or chain as a vision inspection tool.
+
+---
+
 ## `finetune.py` — Train your own LoRA adapter
 
 Train a LoRA adapter on your own dataset, then load it into Anchor.
