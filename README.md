@@ -4,6 +4,19 @@
 
 Load multiple LoRA adapters once. Switch between them at inference time — 216ms, no reload.
 
+```
+                    ┌─────────────────────────────────┐
+  Request           │           Anchor                │
+  model="short" ───▶│                                 │
+                    │  PaliGemma2 base  (VRAM)        │
+                    │  ├── adapter: missing_hole  ◀─  │──▶ "YES / NO"
+                    │  ├── adapter: open_circuit  ◀─  │
+                    │  ├── adapter: short  ◀──────── ─│  pointer swap
+                    │  ├── adapter: mouse_bite    ◀─  │     216ms
+                    │  └── adapter: spur          ◀─  │
+                    └─────────────────────────────────┘
+```
+
 ```bash
 # Call the open_circuit adapter
 curl https://your-anchor-endpoint/v1/chat/completions \
@@ -19,6 +32,28 @@ curl https://your-anchor-endpoint/v1/chat/completions \
     }],
     "max_tokens": 3
   }'
+```
+
+## Quick Demo
+
+```bash
+# 1. Clone and build
+git clone https://github.com/recursia-lab/anchor
+docker build -t anchor .
+
+# 2. Run (mount your model and adapters)
+docker run --gpus all \
+  -v /path/to/paligemma2:/model \
+  -v /path/to/lora:/lora \
+  -p 8080:8080 anchor
+
+# 3. Query any adapter by name
+curl http://localhost:8080/v1/chat/completions \
+  -d '{"model":"open_circuit","messages":[{"role":"user","content":[
+    {"type":"image_url","image_url":{"url":"data:image/jpeg;base64,<b64>"}},
+    {"type":"text","text":"Defect present? YES or NO."}
+  ]}],"max_tokens":3}'
+# → {"choices":[{"message":{"content":"YES"}}],"usage":{"latency_ms":216}}
 ```
 
 ## Why Anchor
