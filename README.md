@@ -23,14 +23,23 @@ curl https://your-anchor-endpoint/v1/chat/completions \
 
 ## Why Anchor
 
-PaliGemma2 fine-tuned LoRA adapters exist. But no mainstream serving framework supports PaliGemma2 LoRA:
+Most serving frameworks load LoRA adapters **per request** — fetching from disk or
+swapping from CPU at inference time. For production workloads where multiple
+fine-tuned adapters are in active use, this adds hundreds of milliseconds per request.
 
-- **vLLM** — does not support PaliGemma2 LoRA (as of v0.11.0)
-- **SGLang** — does not support PaliGemma2 LoRA
-- **Ollama** — does not support PaliGemma2 LoRA
-- **TGI / LoRAX** — does not support PaliGemma2 LoRA
+Anchor takes a different approach: **all adapters live in GPU memory simultaneously**.
+Switching is a pointer swap — 216ms, no disk I/O, no model reload.
 
-Anchor fills this gap: a lightweight server that loads all your LoRA adapters into GPU memory once and routes each request to the right adapter by model name.
+| Framework | PaliGemma2 LoRA | Multi-adapter | Dynamic switch |
+|---|---|---|---|
+| **Anchor** | ✅ | ✅ all in VRAM | ✅ 216ms |
+| vLLM | ✅ (since v0.7.0) | ✅ | per-request load |
+| SGLang | ❌ | — | — |
+| Ollama | ❌ | — | — |
+| TGI / LoRAX | ❌ | — | — |
+
+**When to use Anchor:** production scenarios with 2–10 adapters that all need
+low-latency access. When one adapter is enough, vLLM works fine.
 
 ## Architecture
 
