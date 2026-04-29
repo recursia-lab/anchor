@@ -1,0 +1,38 @@
+steps:
+  # Step 1: Download PaliGemma2 base model + LoRA adapters from GCS
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Base model
+        mkdir -p /workspace/model
+        gsutil -m rsync -r ${_MODEL_GCS} /workspace/model/
+
+        # LoRA adapters (space-separated list in _LORA_NAMES)
+        for defect in ${_LORA_NAMES}; do
+          mkdir -p /workspace/lora/$defect
+          gsutil -m rsync -r ${_LORA_GCS_ROOT}/$defect/ /workspace/lora/$defect/
+          echo "✓ LoRA: $defect"
+        done
+
+  # Step 2: Build and push image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '-t'
+      - '${_IMAGE}'
+      - '.'
+
+images:
+  - '${_IMAGE}'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+
+# Substitution defaults (override in Cloud Build trigger or --substitutions)
+substitutions:
+  _MODEL_GCS: 'gs://YOUR_BUCKET/models/paligemma2-3b-pt-448/'
+  _LORA_GCS_ROOT: 'gs://YOUR_BUCKET/lora'
+  _LORA_NAMES: 'adapter_1 adapter_2'
+  _IMAGE: 'us-central1-docker.pkg.dev/YOUR_PROJECT/YOUR_REPO/anchor:latest'
