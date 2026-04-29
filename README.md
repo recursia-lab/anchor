@@ -4,6 +4,10 @@
 
 Load multiple LoRA adapters once. Switch between them at inference time — 216ms, no reload.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/recursia-lab/anchor/blob/main/examples/anchor_quickstart.ipynb)
+[![PyPI](https://img.shields.io/pypi/v/anchor-vision)](https://pypi.org/project/anchor-vision/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+
 ```
                     ┌─────────────────────────────────┐
   Request           │           Anchor                │
@@ -32,6 +36,21 @@ curl https://your-anchor-endpoint/v1/chat/completions \
     }],
     "max_tokens": 3
   }'
+```
+
+## Python Client
+
+```bash
+pip install anchor-vision
+```
+
+```python
+from anchor_vision import AnchorClient
+
+client = AnchorClient("https://your-anchor.run.app")
+result = client.inspect("image.jpg", adapter="open_circuit")
+print(result.answer)      # "YES"
+print(result.latency_ms)  # 216
 ```
 
 ## Quick Demo
@@ -70,6 +89,7 @@ Switching is a pointer swap — 216ms, no disk I/O, no model reload.
 | **Anchor** | ✅ | ✅ all in VRAM | ✅ 216ms |
 | vLLM | ✅ (since v0.7.0) | ✅ | per-request load |
 | SGLang | 🚧 [PR #24034](https://github.com/sgl-project/sglang/pull/24034) | — | — |
+| Unsloth | 🚧 [PR #5218](https://github.com/unslothai/unsloth/pull/5218) | — | fine-tune only |
 | Ollama | ❌ | — | — |
 | TGI / LoRAX | ❌ | — | — |
 
@@ -93,6 +113,51 @@ Request: model="base"       →  disable_adapters()         →  generate()
 All adapters stay in VRAM. Switching is just a pointer swap — no disk I/O, no model reload.
 
 ## Quick Start
+
+### Python (pip)
+
+```bash
+pip install anchor-vision
+```
+
+```python
+from anchor_vision import AnchorClient
+
+client = AnchorClient("https://your-anchor.run.app")
+
+# List loaded adapters
+print(client.list_adapters())  # ["open_circuit", "short", "mouse_bite", ...]
+
+# Run inference
+result = client.inspect(
+    "image.jpg",
+    adapter="open_circuit",
+    prompt="Is there an open circuit defect? Answer YES or NO.",
+)
+print(result)  # "YES"
+```
+
+### LangChain
+
+```bash
+pip install 'anchor-vision[langchain]'
+```
+
+```python
+from anchor_vision import AnchorVisionTool
+
+tool = AnchorVisionTool(
+    endpoint="https://your-anchor.run.app",
+    adapter="open_circuit",
+    prompt="Is there a defect? Answer YES or NO.",
+)
+
+result = tool.invoke({"image_path": "image.jpg"})
+# → "YES"
+
+# Drop into any LangChain agent
+# agent = initialize_agent(tools=[tool], ...)
+```
 
 ### Local (GPU required)
 
@@ -198,19 +263,25 @@ OpenAI-compatible. Use `model` field to select adapter.
 
 ## Ecosystem
 
+- **Python client:** `pip install anchor-vision`
 - **Adapters:** [recursia-lab/paligemma2-adapters](https://github.com/recursia-lab/paligemma2-adapters) — community LoRA adapter index
 - **SGLang:** [PR #24034](https://github.com/sgl-project/sglang/pull/24034) — native PaliGemma2 LoRA support (pending merge)
+- **Unsloth:** [PR #5218](https://github.com/unslothai/unsloth/pull/5218) — PaliGemma2 fine-tuning support (pending merge)
 - **vLLM:** supported since v0.7.0
 
 ## Roadmap
 
 - [x] PEFT multi-LoRA server (this repo)
 - [x] Google Cloud Run deployment
-- [x] SGLang PR
-- [ ] Ollama Modelfile
+- [x] SGLang PR (#24034)
+- [x] Unsloth PR (#5218)
+- [x] Python client (`pip install anchor-vision`)
+- [x] LangChain integration
+- [x] Colab quickstart notebook
+- [ ] PyPI publish
+- [ ] Ollama support (blocked by llama.cpp SigLIP encoder)
 - [ ] AWQ quantization (2-5x speedup)
 - [ ] Continuous batching
-- [ ] LangChain integration
 
 ## About
 
