@@ -34,7 +34,7 @@ Switching is a pointer swap — 216ms, no disk I/O, no model reload.
 |---|---|---|---|
 | **Anchor** | ✅ | ✅ all in VRAM | ✅ 216ms |
 | vLLM | ✅ (since v0.7.0) | ✅ | per-request load |
-| SGLang | ❌ | — | — |
+| SGLang | 🚧 [PR #24034](https://github.com/sgl-project/sglang/pull/24034) | — | — |
 | Ollama | ❌ | — | — |
 | TGI / LoRAX | ❌ | — | — |
 
@@ -161,13 +161,21 @@ OpenAI-compatible. Use `model` field to select adapter.
 | Concurrent adapters in VRAM | 6 (tested) |
 | GPU memory (6 PCB adapters) | ~12GB / 24GB L4 |
 
+## Ecosystem
+
+- **Adapters:** [recursia-lab/paligemma2-adapters](https://github.com/recursia-lab/paligemma2-adapters) — community LoRA adapter index
+- **SGLang:** [PR #24034](https://github.com/sgl-project/sglang/pull/24034) — native PaliGemma2 LoRA support (pending merge)
+- **vLLM:** supported since v0.7.0
+
 ## Roadmap
 
-- [ ] vLLM backend (once PaliGemma2 LoRA lands in vLLM)
+- [x] PEFT multi-LoRA server (this repo)
+- [x] Google Cloud Run deployment
+- [x] SGLang PR
 - [ ] Ollama Modelfile
-- [ ] SGLang backend
-- [ ] Continuous batching
 - [ ] AWQ quantization (2-5x speedup)
+- [ ] Continuous batching
+- [ ] LangChain integration
 
 ## About
 
